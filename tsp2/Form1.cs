@@ -8,18 +8,17 @@ namespace tsp2
     public partial class Form1 : Form
     {
         private Random random = new Random();
-        private Timer trainTimer;
         private List<int> wagonCounts = new List<int>();
         private int trainCount = 0;
-        private bool isRunning = true;
+        private double averageArrivalTime = 10.0;
+        private double virtualTimeMinutes = 0.0;
 
         public Form1()
         {
             InitializeComponent();
             InitializeChart();
-            InitializeTimer();
-            trainTimer.Start();
-            buttonStartStop.Text = "Стоп";
+
+            buttonStartStop.Text = "Пуск";
         }
 
         private void InitializeChart()
@@ -40,24 +39,27 @@ namespace tsp2
             chart1.Series.Add(histogramSeries);
         }
 
-        private void InitializeTimer()
+        private void GenerateTrains(int numberOfTrains)
         {
-            trainTimer = new Timer();
-            trainTimer.Interval = 200;
-            trainTimer.Tick += TrainArrives;
-        }
+            trainCount = 0;
+            virtualTimeMinutes = 0;
+            wagonCounts.Clear();
+            listBox1.Items.Clear();
 
-        private void TrainArrives(object sender, EventArgs e)
-        {
-            int numWagons = GenerateWagonCount();
-            trainCount++;
+            for (int i = 0; i < numberOfTrains; i++)
+            {
+                double interval = -averageArrivalTime * Math.Log(1.0 - random.NextDouble());
+                virtualTimeMinutes += interval;
 
-            wagonCounts.Add(numWagons);
+                int numWagons = GenerateWagonCount();
+                trainCount++;
+                wagonCounts.Add(numWagons);
 
-            string currentTime = DateTime.Now.ToString("HH:mm:ss");
-            string trainInfo = $"[{currentTime}] Поезд {trainCount} прибыл. Количество вагонов: {numWagons}";
-            listBox1.Items.Add(trainInfo);
-            listBox1.TopIndex = listBox1.Items.Count - 1;
+                TimeSpan virtualTime = TimeSpan.FromMinutes(virtualTimeMinutes);
+                string formattedTime = $"{virtualTime:hh\\:mm\\:ss}";
+                string trainInfo = $"[{formattedTime}] Поезд {trainCount} прибыл. Количество вагонов: {numWagons}";
+                listBox1.Items.Add(trainInfo);
+            }
 
             UpdateHistogram();
         }
@@ -82,13 +84,9 @@ namespace tsp2
             foreach (int count in wagonCounts)
             {
                 if (wagonFrequency.ContainsKey(count))
-                {
                     wagonFrequency[count]++;
-                }
                 else
-                {
                     wagonFrequency[count] = 1;
-                }
             }
 
             foreach (var pair in wagonFrequency)
@@ -99,18 +97,7 @@ namespace tsp2
 
         private void buttonStartStop_Click(object sender, EventArgs e)
         {
-            if (isRunning)
-            {
-                trainTimer.Stop();
-                buttonStartStop.Text = "Старт";
-                isRunning = false;
-            }
-            else
-            {
-                trainTimer.Start();
-                buttonStartStop.Text = "Стоп";
-                isRunning = true;
-            }
+            GenerateTrains(100);
         }
     }
 }
