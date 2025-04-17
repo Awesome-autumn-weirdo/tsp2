@@ -10,8 +10,10 @@ namespace tsp2
         private Random random = new Random();
         private List<int> wagonCounts = new List<int>();
         private int trainCount = 0;
-        private double averageArrivalTime = 10.0;
+        private double averageArrivalTime = 1;
         private double virtualTimeMinutes = 0.0;
+        private double mean = 10;
+        private double stdDev = 4;
 
         public Form1()
         {
@@ -41,10 +43,30 @@ namespace tsp2
 
         private void GenerateTrains(int numberOfTrains)
         {
+            // Проверка средней частоты прибытия
+            if (averageArrivalTime <= 0)
+            {
+                MessageBox.Show("Среднее время прибытия (averageArrivalTime) должно быть положительным!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+            }
+
+            // Проверки параметров нормального распределения
+            if (mean < 0)
+            {
+                MessageBox.Show("Среднее количество вагонов (mean) не может быть отрицательным!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+            }
+
+            if (stdDev <= 0)
+            {
+                MessageBox.Show("Стандартное отклонение (stdDev) должно быть положительным!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+            }
+
             trainCount = 0;
             virtualTimeMinutes = 0;
             wagonCounts.Clear();
-            listBox1.Items.Clear();
+            //listBox1.Items.Clear();
 
             for (int i = 0; i < numberOfTrains; i++)
             {
@@ -66,14 +88,13 @@ namespace tsp2
 
         private int GenerateWagonCount()
         {
-            double mean = 10;
-            double stdDev = 4;
-            double u1 = 1.0 - random.NextDouble();
-            double u2 = 1.0 - random.NextDouble();
-            double randStdNormal = Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
-            int wagonCount = (int)Math.Round(mean + stdDev * randStdNormal);
+            double r1 = 1.0 - random.NextDouble();
+            double r2 = 1.0 - random.NextDouble();
+            double z = Math.Sqrt(-2.0 * Math.Log(r1)) * Math.Sin(2.0 * Math.PI * r2);
+            int wagonCount = (int)Math.Round(mean + stdDev * z);
             return Math.Max(1, wagonCount);
         }
+
 
         private void UpdateHistogram()
         {
@@ -97,7 +118,9 @@ namespace tsp2
 
         private void buttonStartStop_Click(object sender, EventArgs e)
         {
-            GenerateTrains(100);
+            GenerateTrains(5);
+            GenerateTrains(10);
+            GenerateTrains(15);
         }
     }
 }
